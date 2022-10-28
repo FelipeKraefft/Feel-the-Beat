@@ -6,7 +6,6 @@ public class CubemanController : MonoBehaviour
 {
 	public bool MoveVertically = false;
 	public bool MirroredMovement = false;
-	public int player = 1;
 
 	//public GameObject debugText;
 	
@@ -82,249 +81,123 @@ public class CubemanController : MonoBehaviour
 	// Update is called once per frame
 	void Update () 
 	{
-		if (player == 1)
-        {
+		KinectManager manager = KinectManager.Instance;
 
-			KinectManager manager = KinectManager.Instance;
-
-			// get 1st player
-			uint playerID = manager != null ? manager.GetPlayer1ID() : 0;
-
-			if (playerID <= 0)
+		// get 1st player
+		uint playerID = manager != null ? manager.GetPlayer1ID() : 0;
+		
+		if(playerID <= 0)
+		{
+			// reset the pointman position and rotation
+			if(transform.position != initialPosition)
 			{
-				// reset the pointman position and rotation
-				if (transform.position != initialPosition)
-				{
-					transform.position = initialPosition;
-				}
-
-				if (transform.rotation != initialRotation)
-				{
-					transform.rotation = initialRotation;
-				}
-
-				for (int i = 0; i < bones.Length; i++)
-				{
-					bones[i].gameObject.SetActive(true);
-
-					bones[i].transform.localPosition = Vector3.zero;
-					bones[i].transform.localRotation = Quaternion.identity;
-
-					if (SkeletonLine)
-					{
-						lines[i].gameObject.SetActive(false);
-					}
-				}
-
-				return;
+				transform.position = initialPosition;
 			}
-
-			// set the user position in space
-			Vector3 posPointMan = manager.GetUserPosition(playerID);
-			posPointMan.z = !MirroredMovement ? -posPointMan.z : posPointMan.z;
-
-			// store the initial position
-			if (initialPosUserID != playerID)
+			
+			if(transform.rotation != initialRotation)
 			{
-				initialPosUserID = playerID;
-				initialPosOffset = transform.position - (MoveVertically ? posPointMan : new Vector3(posPointMan.x, 0, posPointMan.z));
+				transform.rotation = initialRotation;
 			}
-
-			transform.position = initialPosOffset + (MoveVertically ? posPointMan : new Vector3(posPointMan.x, 0, posPointMan.z));
-
-			// update the local positions of the bones
-			for (int i = 0; i < bones.Length; i++)
+			
+			for(int i = 0; i < bones.Length; i++) 
 			{
-				if (bones[i] != null)
+				bones[i].gameObject.SetActive(true);
+				
+				bones[i].transform.localPosition = Vector3.zero;
+				bones[i].transform.localRotation = Quaternion.identity;
+				
+				if(SkeletonLine)
 				{
-					int joint = MirroredMovement ? KinectWrapper.GetSkeletonMirroredJoint(i) : i;
-
-					if (manager.IsJointTracked(playerID, joint))
-					{
-						bones[i].gameObject.SetActive(true);
-
-						Vector3 posJoint = manager.GetJointPosition(playerID, joint);
-						posJoint.z = !MirroredMovement ? -posJoint.z : posJoint.z;
-
-						Quaternion rotJoint = manager.GetJointOrientation(playerID, joint, !MirroredMovement);
-						rotJoint = initialRotation * rotJoint;
-
-						posJoint -= posPointMan;
-
-						if (MirroredMovement)
-						{
-							posJoint.x = -posJoint.x;
-							posJoint.z = -posJoint.z;
-						}
-
-						bones[i].transform.localPosition = posJoint;
-						bones[i].transform.rotation = rotJoint;
-					}
-					else
-					{
-						bones[i].gameObject.SetActive(false);
-					}
+					lines[i].gameObject.SetActive(false);
 				}
 			}
-
-			if (SkeletonLine)
-			{
-				for (int i = 0; i < bones.Length; i++)
-				{
-					bool bLineDrawn = false;
-
-					if (bones[i] != null)
-					{
-						if (bones[i].gameObject.activeSelf)
-						{
-							Vector3 posJoint = bones[i].transform.position;
-
-							int parI = parIdxs[i];
-							Vector3 posParent = bones[parI].transform.position;
-
-							if (bones[parI].gameObject.activeSelf)
-							{
-								lines[i].gameObject.SetActive(true);
-
-								//lines[i].SetVertexCount(2);
-								lines[i].SetPosition(0, posParent);
-								lines[i].SetPosition(1, posJoint);
-
-								bLineDrawn = true;
-							}
-						}
-					}
-
-					if (!bLineDrawn)
-					{
-						lines[i].gameObject.SetActive(false);
-					}
-				}
-			}
-
+			
+			return;
 		}
 
-		else if (player == 2)
-        {
+		// set the user position in space
+		Vector3 posPointMan = manager.GetUserPosition(playerID);
+		posPointMan.z = !MirroredMovement ? -posPointMan.z : posPointMan.z;
+		
+		// store the initial position
+		if(initialPosUserID != playerID)
+		{
+			initialPosUserID = playerID;
+			initialPosOffset = transform.position - (MoveVertically ? posPointMan : new Vector3(posPointMan.x, 0, posPointMan.z));
+		}
+		
+		transform.position = initialPosOffset + (MoveVertically ? posPointMan : new Vector3(posPointMan.x, 0, posPointMan.z));
 
-			KinectManager manager = KinectManager.Instance;
-
-			// get 1st player
-			uint playerID = manager != null ? manager.GetPlayer2ID() : 0;
-
-			if (playerID <= 0)
+		// update the local positions of the bones
+		for(int i = 0; i < bones.Length; i++) 
+		{
+			if(bones[i] != null)
 			{
-				// reset the pointman position and rotation
-				if (transform.position != initialPosition)
-				{
-					transform.position = initialPosition;
-				}
-
-				if (transform.rotation != initialRotation)
-				{
-					transform.rotation = initialRotation;
-				}
-
-				for (int i = 0; i < bones.Length; i++)
+				int joint = MirroredMovement ? KinectWrapper.GetSkeletonMirroredJoint(i): i;
+				
+				if(manager.IsJointTracked(playerID, joint))
 				{
 					bones[i].gameObject.SetActive(true);
+					
+					Vector3 posJoint = manager.GetJointPosition(playerID, joint);
+					posJoint.z = !MirroredMovement ? -posJoint.z : posJoint.z;
 
-					bones[i].transform.localPosition = Vector3.zero;
-					bones[i].transform.localRotation = Quaternion.identity;
+					Quaternion rotJoint = manager.GetJointOrientation(playerID, joint, !MirroredMovement);
+					rotJoint = initialRotation * rotJoint;
 
-					if (SkeletonLine)
+					posJoint -= posPointMan;
+
+					if(MirroredMovement)
 					{
-						lines[i].gameObject.SetActive(false);
+						posJoint.x = -posJoint.x;
+						posJoint.z = -posJoint.z;
 					}
+
+					bones[i].transform.localPosition = posJoint;
+					bones[i].transform.rotation = rotJoint;
 				}
-
-				return;
-			}
-
-			// set the user position in space
-			Vector3 posPointMan = manager.GetUserPosition(playerID);
-			posPointMan.z = !MirroredMovement ? -posPointMan.z : posPointMan.z;
-
-			// store the initial position
-			if (initialPosUserID != playerID)
-			{
-				initialPosUserID = playerID;
-				initialPosOffset = transform.position - (MoveVertically ? posPointMan : new Vector3(posPointMan.x, 0, posPointMan.z));
-			}
-
-			transform.position = initialPosOffset + (MoveVertically ? posPointMan : new Vector3(posPointMan.x, 0, posPointMan.z));
-
-			// update the local positions of the bones
-			for (int i = 0; i < bones.Length; i++)
-			{
-				if (bones[i] != null)
+				else
 				{
-					int joint = MirroredMovement ? KinectWrapper.GetSkeletonMirroredJoint(i) : i;
-
-					if (manager.IsJointTracked(playerID, joint))
-					{
-						bones[i].gameObject.SetActive(true);
-
-						Vector3 posJoint = manager.GetJointPosition(playerID, joint);
-						posJoint.z = !MirroredMovement ? -posJoint.z : posJoint.z;
-
-						Quaternion rotJoint = manager.GetJointOrientation(playerID, joint, !MirroredMovement);
-						rotJoint = initialRotation * rotJoint;
-
-						posJoint -= posPointMan;
-
-						if (MirroredMovement)
-						{
-							posJoint.x = -posJoint.x;
-							posJoint.z = -posJoint.z;
-						}
-
-						bones[i].transform.localPosition = posJoint;
-						bones[i].transform.rotation = rotJoint;
-					}
-					else
-					{
-						bones[i].gameObject.SetActive(false);
-					}
+					bones[i].gameObject.SetActive(false);
 				}
-			}
-
-			if (SkeletonLine)
-			{
-				for (int i = 0; i < bones.Length; i++)
-				{
-					bool bLineDrawn = false;
-
-					if (bones[i] != null)
-					{
-						if (bones[i].gameObject.activeSelf)
-						{
-							Vector3 posJoint = bones[i].transform.position;
-
-							int parI = parIdxs[i];
-							Vector3 posParent = bones[parI].transform.position;
-
-							if (bones[parI].gameObject.activeSelf)
-							{
-								lines[i].gameObject.SetActive(true);
-
-								//lines[i].SetVertexCount(2);
-								lines[i].SetPosition(0, posParent);
-								lines[i].SetPosition(1, posJoint);
-
-								bLineDrawn = true;
-							}
-						}
-					}
-
-					if (!bLineDrawn)
-					{
-						lines[i].gameObject.SetActive(false);
-					}
-				}
-			}
-
+			}	
 		}
+
+		if(SkeletonLine)
+		{
+			for(int i = 0; i < bones.Length; i++) 
+			{
+				bool bLineDrawn = false;
+
+				if(bones[i] != null)
+				{
+					if(bones[i].gameObject.activeSelf)
+					{
+						Vector3 posJoint = bones[i].transform.position;
+
+						int parI = parIdxs[i];
+						Vector3 posParent = bones[parI].transform.position;
+
+						if(bones[parI].gameObject.activeSelf)
+						{
+							lines[i].gameObject.SetActive(true);
+							
+							//lines[i].SetVertexCount(2);
+							lines[i].SetPosition(0, posParent);
+							lines[i].SetPosition(1, posJoint);
+
+							bLineDrawn = true;
+						}
+					}
+				}	
+
+				if(!bLineDrawn)
+				{
+					lines[i].gameObject.SetActive(false);
+				}
+			}
+		}
+
 	}
 
 }
